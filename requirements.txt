@@ -1,0 +1,10 @@
+flask
+flask-cors
+keras
+tensorflow-cpu
+librosa
+numpy
+scikit-learn
+werkzeug
+reportlab
+python-docx

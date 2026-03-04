@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI Music Genre Classifier</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(to right, #add8e6, #90ee90);
+            color: #333;
+            text-align: center;
+            padding: 50px;
+        }
+        .container {
+            background: rgba(255,255,255,0.85);
+            padding: 40px;
+            border-radius: 20px;
+            width: 480px;
+            margin: auto;
+            box-shadow: 0 0 35px rgba(0,0,0,0.3);
+        }
+        h1 { margin-bottom:5px; color:#2c3e50;}
+        h3 { margin-top:5px; color: #16a085; font-weight: normal; }
+        h4 { margin-top:5px; color: #27ae60; font-weight: normal; }
+        input[type="file"] { display:none; }
+        .file-label { display:inline-block; padding:10px 20px; background-color: #e74c3c; color:white; border-radius:8px; cursor:pointer; margin:20px 0; transition:0.3s; }
+        .file-label.green { background-color:#2ecc71; }
+        button { background:#3498db; border:none; padding:10px 20px; color:white; font-size:16px; border-radius:8px; cursor:pointer; transition:0.3s; margin:5px;}
+        button:hover { background:#2980b9; }
+        .result { margin-top:20px; font-size:18px; font-weight:bold; }
+        .confidence { font-size:16px; margin-top:10px; }
+        .metrics { margin-top:15px; font-size:14px; color:#555; }
+        .music-icon { font-size:50px; margin-bottom:10px; }
+        #selectedFile { font-size:14px; color:#555; margin-top:5px;}
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="music-icon">🎵🎧</div>
+    <h1>AI Music Genre Classifier</h1>
+    <h3>Welcome to Dhruv Mini-Project</h3>
+    <h4>Analyze your audio and get detailed genre prediction</h4>
+
+    <input type="file" id="audioFile" accept="audio/*" onchange="changeColor()">
+    <label for="audioFile" class="file-label" id="fileLabel">Choose Audio File</label>
+    <div id="selectedFile"></div>
+    <br>
+
+    <button onclick="uploadFile()">Predict Genre</button>
+    <button id="downloadPdf" style="display:none;">Download PDF</button>
+    <button id="downloadDocx" style="display:none;">Download DOCX</button>
+
+    <div class="result" id="result"></div>
+    <div class="confidence" id="confidence"></div>
+    <div class="metrics" id="metrics"></div>
+</div>
+
+<script>
+let pdfFile = "", docxFile = "";
+
+function changeColor() {
+    const fileInput = document.getElementById("audioFile");
+    const label = document.getElementById("fileLabel");
+    const selectedDiv = document.getElementById("selectedFile");
+    if(fileInput.files.length>0){
+        const fname = fileInput.files[0].name;
+        label.classList.add("green");
+        label.innerHTML="Audio Selected ✔";
+        selectedDiv.innerHTML="Selected File: <b>"+fname+"</b>";
+    } else {
+        label.classList.remove("green");
+        label.innerHTML="Choose Audio File";
+        selectedDiv.innerHTML="";
+    }
+}
+
+async function uploadFile(){
+    const fileInput = document.getElementById("audioFile");
+    if(fileInput.files.length==0){ alert("Please select an audio file!"); return; }
+    const formData = new FormData();
+    formData.append("file", fileInput.files[0]);
+
+    const response = await fetch("/predict", { method:"POST", body:formData });
+    const data = await response.json();
+    if(data.error){ alert(data.error); return; }
+
+    document.getElementById("result").innerHTML="🎼 Predicted Genre: <b>"+data.genre+"</b>";
+    document.getElementById("confidence").innerHTML="Confidence: "+data.confidence.toFixed(2)+"%";
+    document.getElementById("metrics").innerHTML="Model Accuracy: "+data.accuracy+" | F1 Score: "+data.f1_score;
+
+    // Show download buttons
+    pdfFile = data.pdf_file;
+    docxFile = data.docx_file;
+    document.getElementById("downloadPdf").style.display="inline-block";
+    document.getElementById("downloadDocx").style.display="inline-block";
+
+    document.getElementById("downloadPdf").onclick=()=>{ window.open("/download/"+pdfFile,"_blank"); };
+    document.getElementById("downloadDocx").onclick=()=>{ window.open("/download/"+docxFile,"_blank"); };
+}
+</script>
+</body>
+</html>
